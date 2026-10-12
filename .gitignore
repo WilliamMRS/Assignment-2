@@ -1,0 +1,19 @@
+.claude/assignment.md
+
+# Datasets (see data/README.md)
+data/*
+!data/README.md
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Editors
+.vscode/
+.idea/
