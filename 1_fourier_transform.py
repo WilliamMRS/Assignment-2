@@ -16,7 +16,7 @@ magnitude_spectrum = 20 * np.log(1 + np.abs(fshift))
 plt.figure(figsize=(12, 6))
 plt.subplot(121), plt.imshow(img, cmap='gray'), plt.title('Original Image')
 plt.subplot(122), plt.imshow(magnitude_spectrum, cmap='gray'), plt.title('Frequency Spectrum')
-plt.savefig('task1.png')
+plt.savefig('output/fourier/task1.png')
 plt.show()
 
 
@@ -77,7 +77,7 @@ plt.title(f'Low-pass r=100\nPSNR={p_100:.1f} dB')
 plt.axis('off')
 
 plt.tight_layout()
-plt.savefig('task2.png')
+plt.savefig('output/fourier/task2.png')
 plt.show()
 
 
@@ -90,7 +90,7 @@ plt.subplot(131), plt.imshow(img, cmap='gray'), plt.title('Original')
 plt.subplot(132), plt.imshow(highpass_mask(30), cmap='gray'), plt.title('High-pass mask')
 plt.subplot(133), plt.imshow(np.abs(hp), cmap='gray'), plt.title('High-pass filter')
 plt.tight_layout()
-plt.savefig('task3.png')
+plt.savefig('output/fourier/task3.png')
 plt.show()
 
 
@@ -109,5 +109,5 @@ for i, p in enumerate(percents):
     plt.title(f'Keep {p}% (ratio {100 / p:.0f}:1)\nMSE={mse:.1f}, PSNR={q:.1f} dB')
     print(f'{p:>5}% kept | compression ~{100 / p:>5.0f}:1 | MSE {mse:8.2f} | PSNR {q:5.2f} dB')
 plt.tight_layout()
-plt.savefig('task4.png')
+plt.savefig('output/fourier/task4.png')
 plt.show()
