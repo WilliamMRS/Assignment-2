@@ -11,3 +11,4 @@ data/
 ```
 
 `3_hog_features.py` needs `data/vehicles/` (e.g. `data/vehicles/sedan/PIC_1.jpg`).
+`lbp/lbp_features.py` needs `data/intel-image-classification (1)/seg_test/seg_test/` for the scene-class comparison.

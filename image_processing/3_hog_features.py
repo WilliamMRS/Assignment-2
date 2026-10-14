@@ -8,7 +8,7 @@ Steps covered (see assignment HOG tasks 1-4):
   4. compare_images()         -> descriptor statistics / similarity between images
      parameter_sweep()        -> effect of cell size, block size, number of bins
 
-Figures are written to output/hog/.
+Figures are written to image_processing/output/hog/.
 """
 from pathlib import Path
 
@@ -17,7 +17,11 @@ import numpy as np
 from skimage import color, data, exposure, filters, io, transform
 from skimage.feature import hog
 
-OUT_DIR = Path("output/hog")
+# Paths are relative to this file, so the script runs from any working directory
+HERE = Path(__file__).resolve().parent
+DATA_DIR = HERE.parent / "data" / "vehicles"
+CHOSEN_DIR = HERE / "chosen_images"
+OUT_DIR = HERE / "output" / "hog"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # All images are resized to the same shape so descriptor lengths are comparable.
@@ -27,12 +31,13 @@ IMG_SHAPE = (128, 192)
 # Default parameters (Dalal & Triggs, 2005)
 DEFAULTS = dict(orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2))
 
-# (label, loader) ordered from simple to complex
+# (label, loader) ordered from simple to complex.
+# horse.png is scikit-image's data.horse(); the others are copied from data/vehicles/.
 IMAGES = [
-    ("Simple: horse silhouette", lambda: data.horse()),
-    ("Medium: sedan, clean background", lambda: io.imread("data/vehicles/sedan/PIC_1.jpg")),
-    ("Complex: motorcycle + rider", lambda: io.imread("data/vehicles/motorcycle/PIC_0.jpg")),
-    ("Complex: pickup, cluttered scene", lambda: io.imread("data/vehicles/pickup/PIC_15.jpg")),
+    ("Simple: horse silhouette", lambda: io.imread(CHOSEN_DIR / "horse.png")),
+    ("Medium: sedan, clean background", lambda: io.imread(CHOSEN_DIR / "sedan_PIC_1.jpg")),
+    ("Complex: motorcycle + rider", lambda: io.imread(CHOSEN_DIR / "motorcycle_PIC_0.jpg")),
+    ("Complex: pickup, cluttered scene", lambda: io.imread(CHOSEN_DIR / "pickup_PIC_15.jpg")),
 ]
 
 
@@ -174,10 +179,10 @@ def compare_images(results):
 def class_similarity(n_per_class=30, seed=0):
     """Does HOG separate vehicle classes? Mean cosine similarity within/between classes."""
     rng = np.random.default_rng(seed)
-    classes = sorted(p.name for p in Path("data/vehicles").iterdir() if p.is_dir())
+    classes = sorted(p.name for p in DATA_DIR.iterdir() if p.is_dir())
     feats = {}
     for c in classes:
-        files = sorted(Path("data/vehicles", c).glob("*.[jJ][pP][gG]"))
+        files = sorted((DATA_DIR / c).glob("*.[jJ][pP][gG]"))
         pick = rng.choice(len(files), size=min(n_per_class, len(files)), replace=False)
         F = np.stack([compute_hog(load_gray(lambda f=files[i]: io.imread(f)), **DEFAULTS)[0]
                       for i in pick])
