@@ -3,13 +3,15 @@ LBP (Local Binary Patterns), basic 8-neighbour method, implemented from scratch.
 
 Steps covered (see assignment LBP tasks 1-7):
   1. lbp()                    -> LBP code for every pixel of a grayscale image
-  2. plot_lbp_images()        -> original | LBP image | histogram
+     plot_worked_example()    -> how one brick-wall neighbourhood becomes one code
+  2. plot_lbp_images()        -> brick wall: original | LBP image
   3. lbp_histogram()          -> normalised 256-bin histogram of the LBP image
-  4. plot_lbp_images()        -> histogram plot (log scale, 256 codes)
-     plot_worked_example()    -> how one 3x3 neighbourhood becomes one code
-  5. IMAGES                   -> natural scenes, texture, face
-  6. compare_histograms()     -> pattern-type histograms + chi-square distances
-  7. scene_classes()          -> same comparison over many Intel scene images
+  4. plot_lbp_histograms()    -> brick-wall histogram (log scale, wide figure)
+  5. plot_lbp_images()        -> brick wall plus forest, sea and face
+  6. plot_lbp_histograms()    -> four histograms for comparison
+  7. compare_histograms()     -> pattern types + distances to support the discussion
+
+Optional extension: scene_classes() compares many Intel scene images.
 
 Figures are written to image_processing/lbp/output/.
 """
@@ -29,9 +31,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 # forest/sea: Intel Image Classification (150x150), brick: scikit-image data.brick(),
 # face: facial-emotion-recognition set (subject 1, Neutral), cropped to the face.
 IMAGES = [
+    ("Texture: brick wall", "brick.png"),
     ("Natural scene: forest", "forest_20062.jpg"),
     ("Natural scene: sea", "sea_20106.jpg"),
-    ("Texture: brick wall", "brick.png"),
     ("Face", "face_neutral.jpg"),
 ]
 
@@ -110,7 +112,7 @@ def entropy(hist):
 
 
 # ----------------------------------------------------------------------------
-# Task 4: worked example of one code
+# Task 1: worked example of one code
 # ----------------------------------------------------------------------------
 def plot_worked_example(img, label):
     """Show how one 3x3 neighbourhood is thresholded and turned into a code."""
@@ -159,41 +161,61 @@ def plot_worked_example(img, label):
 
 
 # ----------------------------------------------------------------------------
-# Task 2 + 4 + 5: LBP image and histogram for every chosen image
+# Task 2 + 5: original and LBP images in a wide figure
 # ----------------------------------------------------------------------------
-def plot_lbp_images(images):
+def plot_lbp_images(images, filename="2_lbp_images.png"):
     results = []
-    fig, axes = plt.subplots(len(images), 3, figsize=(15, 3.6 * len(images)),
-                             gridspec_kw=dict(width_ratios=[1, 1, 2.2]))
-    for row, (label, img) in zip(axes, images):
+    columns = min(2, len(images))
+    rows = (len(images) + columns - 1) // columns
+    fig = plt.figure(figsize=(14, 7), layout="constrained")
+    groups = fig.subfigures(rows, columns, squeeze=False)
+    for group, (label, img) in zip(groups.flat, images):
         codes = lbp(img)
         hist = lbp_histogram(codes)
         results.append((label, img, codes, hist))
 
+        group.suptitle(f"{label} ({img.shape[1]}x{img.shape[0]})")
+        row = group.subplots(1, 2)
         row[0].imshow(img, cmap="gray")
-        row[0].set_title(f"{label}  ({img.shape[1]}x{img.shape[0]})")
+        row[0].set_title("Original")
         row[1].imshow(codes, cmap="gray", vmin=0, vmax=255)
         row[1].set_title("LBP image (code 0-255)")
         for ax in row[:2]:
             ax.axis("off")
 
-        row[2].bar(np.arange(256), hist, width=1.0)
-        row[2].set_yscale("log")
-        row[2].set_ylim(1e-5, 1)
-        row[2].set_xlim(-1, 256)
-        row[2].set_xticks([0, 31, 63, 127, 191, 255])
-        row[2].set_ylabel("share of pixels (log)")
-        row[2].set_title(f"LBP histogram  -  entropy {entropy(hist):.2f} bits")
+    fig.savefig(OUT_DIR / filename, dpi=120)
+    plt.close(fig)
+    return results
+
+
+# ----------------------------------------------------------------------------
+# Task 4 + 6: one demonstration histogram, then all four for comparison
+# ----------------------------------------------------------------------------
+def plot_lbp_histograms(results, filename="3_lbp_histograms.png"):
+    columns = min(2, len(results))
+    rows = (len(results) + columns - 1) // columns
+    fig, axes = plt.subplots(rows, columns, figsize=(14, 4 if len(results) == 1 else 7), squeeze=False,
+                             sharex=True, sharey=True)
+    for ax, (label, img, codes, hist) in zip(axes.flat, results):
+        ax.bar(np.arange(256), hist, width=1.0)
+        ax.set_yscale("log")
+        ax.set_ylim(1e-5, 1)
+        ax.set_xlim(-1, 256)
+        ax.set_xticks([0, 31, 63, 127, 191, 255])
+        ax.set_xlabel("LBP code")
+        ax.set_ylabel("share of pixels (log)")
+        ax.tick_params(labelbottom=True, labelleft=True)
+        ax.set_title(f"{label}\nLBP histogram - entropy {entropy(hist):.2f} bits")
 
         top = np.argsort(hist)[::-1][:3]
         print(f"{label:24s} uniform {pattern_type_histogram(hist)[:9].sum():5.1%}  "
               f"code255 {hist[255]:5.1%}  code0 {hist[0]:5.1%}  entropy {entropy(hist):.2f}  "
               f"top: " + ", ".join(f"{c} ({c:08b}) {hist[c]:.1%}" for c in top))
-    axes[-1, 2].set_xlabel("LBP code")
+    for ax in list(axes.flat)[len(results):]:
+        ax.axis("off")
     fig.tight_layout()
-    fig.savefig(OUT_DIR / "2_lbp_images.png", dpi=120)
+    fig.savefig(OUT_DIR / filename, dpi=120)
     plt.close(fig)
-    return results
 
 
 # ----------------------------------------------------------------------------
@@ -286,9 +308,15 @@ def scene_classes(n_per_class=50, seed=0):
 if __name__ == "__main__":
     images = [(label, load_gray(CHOSEN_DIR / name)) for label, name in IMAGES]
 
-    label, img = images[2]  # brick: clear edges, good for a readable example
+    # Tasks 1-4: introduce the method using only the brick wall.
+    label, img = images[0]
     plot_worked_example(img, label)
+    example_results = plot_lbp_images(images[:1], filename="2_brick_lbp.png")
+    plot_lbp_histograms(example_results, filename="4_brick_histogram.png")
+
+    # Tasks 5-7: compare the same brick wall with three additional images.
     results = plot_lbp_images(images)
+    plot_lbp_histograms(results)
     compare_histograms(results)
     scene_classes()
 

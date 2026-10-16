@@ -1,0 +1,18 @@
+{
+  "parameters": {
+    "threshold": 0.35,
+    "smooth_sigma": 1.5,
+    "min_area": 80
+  },
+  "connectivity": 8,
+  "gaussian_boundary_mode": "reflect",
+  "score": "clip(R - (G+B)/2, 0, 1)",
+  "positions": "Unweighted centroid; x=column, y=row; zero-based pixels",
+  "bounding_boxes": "x0/y0 inclusive; x1/y1 exclusive",
+  "images": [
+    "/Users/william/Documents/GitHub/Assignment-2/image_processing/blob/chosen_images/hm1_1.png",
+    "/Users/william/Documents/GitHub/Assignment-2/image_processing/blob/chosen_images/hm20_27.png",
+    "/Users/william/Documents/GitHub/Assignment-2/image_processing/blob/chosen_images/hm20_9.png",
+    "/Users/william/Documents/GitHub/Assignment-2/image_processing/blob/chosen_images/hm50_28.png"
+  ]
+}
